@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  @apply bg-zinc-950 text-zinc-100 antialiased;
+}
+
+* {
+  outline-color: rgba(45, 212, 191, 0.55); /* accent-ish focus */
+}
+
+::selection {
+  background: rgba(45, 212, 191, 0.25);
+}
+
+/* Subtle background noise (cheap + effective) */
+.bg-noise {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.06) 1px, transparent 0);
+  background-size: 22px 22px;
+}
