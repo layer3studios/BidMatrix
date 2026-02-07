@@ -33,6 +33,10 @@ export const useDemoStore = create<DemoState>()(
 
       resetDemo: () => set({ slowNetwork: false, injectAddendum: false, injectBidUpdate: false }),
     }),
-    { name: "bidmatrix.demo" },
+    {
+      name: "bidmatrix.demo",
+      version: 1,
+      migrate: (persistedState: any) => persistedState as DemoState,
+    },
   ),
 );

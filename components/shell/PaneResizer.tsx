@@ -18,16 +18,25 @@ export function PaneResizer({
       aria-label={ariaLabel}
       tabIndex={0}
       className={cn(
-        "group relative w-3 cursor-col-resize",
+        "group relative w-3 cursor-col-resize select-none",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40",
         className,
       )}
       onMouseDown={(e) => {
         e.preventDefault();
+
+        // Prevent selection during drag
+        const prevUserSelect = document.body.style.userSelect;
+        document.body.style.userSelect = "none";
+
         const startX = e.clientX;
 
-        const onMove = (ev: MouseEvent) => onDrag(ev.clientX - startX);
+        const onMove = (ev: MouseEvent) => {
+          onDrag(ev.clientX - startX);
+        };
+
         const onUp = () => {
+          document.body.style.userSelect = prevUserSelect;
           window.removeEventListener("mousemove", onMove);
           window.removeEventListener("mouseup", onUp);
         };

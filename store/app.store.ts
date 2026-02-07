@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import type { Role } from "@/lib/data/models";
 
 type ThemeMode = "dark" | "light";
@@ -11,7 +11,7 @@ type AppState = {
   lastPackageId?: string;
 
   // responsive shell
-  sidebarOpen: boolean; // used for mobile/off-canvas
+  sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
 
@@ -46,6 +46,15 @@ export const useAppStore = create<AppState>()(
           sidebarOpen: false,
         }),
     }),
-    { name: "bidmatrix.app" },
+    {
+      name: "bidmatrix.app",
+      version: 1,
+      migrate: (persistedState: any, version: number) => {
+        if (version === 0) {
+          // migration logic if needed
+        }
+        return persistedState as AppState;
+      },
+    },
   ),
 );

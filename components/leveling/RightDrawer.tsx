@@ -5,6 +5,12 @@ import { cn } from "@/lib/utils/cn";
 import { useLevelingStore, type DrawerTab } from "@/store/leveling.store";
 import { Button } from "@/components/ui/Button";
 
+// Import "Real" components
+import { AuditTimeline } from "./drawer/AuditTimeline";
+import { BidderProfile } from "./drawer/BidderProfile";
+import { ScopeDetail } from "./drawer/ScopeDetail";
+import { DocumentCenter } from "./drawer/DocumentCenter"; // New import
+
 const tabs: { id: DrawerTab; label: string }[] = [
   { id: "bidder", label: "Bidder 360" },
   { id: "scope", label: "Scope Item" },
@@ -27,35 +33,36 @@ export function RightDrawer() {
       {drawerOpen ? (
         <motion.aside
           key="drawer"
-          initial={{ opacity: 0, x: 14 }}
-          animate={{ opacity: 1, x: 0, transition: { type: "spring", stiffness: 420, damping: 34 } }}
-          exit={{ opacity: 0, x: 14, transition: { duration: 0.12 } }}
-          className="h-full border-l border-zinc-800/70 bg-zinc-950/35"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0, transition: { type: "spring", stiffness: 350, damping: 30 } }}
+          exit={{ opacity: 0, x: 20, transition: { duration: 0.15 } }}
+          className="h-full border-l border-zinc-800/70 bg-zinc-950/50 backdrop-blur-xl flex flex-col shadow-2xl z-50 relative"
         >
-          <div className="flex items-center justify-between border-b border-zinc-800/70 px-3 py-2">
+          {/* Header */}
+          <div className="shrink-0 flex items-center justify-between border-b border-zinc-800/70 px-4 py-3 bg-zinc-950/80">
             <div className="min-w-0">
-              <div className="text-sm font-semibold text-zinc-100">Context</div>
-              <div className="mt-0.5 text-[11px] text-zinc-500">
-                Bidder: <span className="text-zinc-300">{selectedBidderId ?? "—"}</span> • Scope:{" "}
-                <span className="text-zinc-300">{selectedScopeId ?? "—"}</span>
+              <div className="text-sm font-semibold text-zinc-100">Inspector</div>
+              <div className="mt-0.5 text-[11px] text-zinc-500 truncate pr-4">
+                {selectedBidderId || "No Bidder"} • {selectedScopeId || "No Scope"}
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={closeDrawer}>
-              Close
+            <Button variant="ghost" size="sm" onClick={closeDrawer} className="h-7 w-7 p-0 rounded-full">
+              ×
             </Button>
           </div>
 
-          <div className="border-b border-zinc-800/70 px-2 py-2">
-            <div className="flex flex-wrap gap-1">
+          {/* Tabs */}
+          <div className="shrink-0 border-b border-zinc-800/70 px-2 py-2 bg-zinc-950/40">
+            <div className="flex gap-1 overflow-x-auto no-scrollbar">
               {tabs.map((t) => (
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
                   className={cn(
-                    "rounded-md px-2.5 py-1 text-[12px] transition",
+                    "whitespace-nowrap rounded-md px-3 py-1.5 text-[11px] font-medium transition-all",
                     activeTab === t.id
-                      ? "bg-teal-500/10 text-teal-100 ring-1 ring-teal-400/25"
-                      : "text-zinc-300 hover:bg-zinc-900/60 hover:text-zinc-100",
+                      ? "bg-zinc-800 text-white shadow-sm ring-1 ring-zinc-700"
+                      : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
                   )}
                 >
                   {t.label}
@@ -64,8 +71,13 @@ export function RightDrawer() {
             </div>
           </div>
 
-          <div className="h-[calc(100%-92px)] overflow-auto p-3">
-            <DrawerBody tab={activeTab} />
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-4 bg-zinc-950/20">
+            <DrawerContent 
+                tab={activeTab} 
+                bidderId={selectedBidderId} 
+                scopeId={selectedScopeId} 
+            />
           </div>
         </motion.aside>
       ) : null}
@@ -73,23 +85,31 @@ export function RightDrawer() {
   );
 }
 
-function DrawerBody({ tab }: { tab: DrawerTab }) {
-  return (
-    <div className="space-y-3">
-      <div className="rounded-lg border border-zinc-800/70 bg-zinc-950/40 p-3">
-        <div className="text-[11px] uppercase tracking-wider text-zinc-500">Active tab</div>
-        <div className="mt-1 text-sm text-zinc-100">{tab}</div>
-        <div className="mt-1 text-sm text-zinc-400">
-          Next: bind real bidder/scope modules, diff viewer, attachments, and audit deep-links.
-        </div>
-      </div>
+function DrawerContent({ tab, bidderId, scopeId }: { tab: DrawerTab; bidderId?: string; scopeId?: string }) {
+  // Empty states handling
+  if (tab === "bidder" && !bidderId) return <EmptyState label="Select a bidder to view profile" />;
+  if (tab === "scope" && !scopeId) return <EmptyState label="Select a scope row to view details" />;
+  if (tab === "variance" && (!scopeId || !bidderId)) return <EmptyState label="Select a cell to view variance" />;
 
-      <div className="rounded-lg border border-zinc-800/70 bg-zinc-950/40 p-3">
-        <div className="text-sm font-medium text-zinc-100">Auditability hook</div>
-        <div className="mt-1 text-sm text-zinc-400">
-          Drawer interactions will write audit events (UI-only, persisted).
+  switch (tab) {
+    case "audit":
+      return <AuditTimeline />;
+    case "bidder":
+      return <BidderProfile bidderId={bidderId!} />;
+    case "scope":
+    case "variance": 
+      return <ScopeDetail scopeId={scopeId!} bidderId={bidderId} />;
+    case "docs":
+      return <DocumentCenter />; // Now using the component
+    default:
+      return null;
+  }
+}
+
+function EmptyState({ label }: { label: string }) {
+    return (
+        <div className="flex h-full flex-col items-center justify-center text-center opacity-60">
+            <div className="text-sm text-zinc-400">{label}</div>
         </div>
-      </div>
-    </div>
-  );
+    )
 }
